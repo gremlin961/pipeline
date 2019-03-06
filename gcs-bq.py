@@ -39,6 +39,10 @@ def CreateDataflowJob(event, context):
         BUCKET = '<your_GCS_bucket_name>'
         # The destination tabled in BigQuery. The format is GCP_Project_ID:dataset:table
         BQ_OUTPUT_TABLE = "<Project_ID:BigQuery_Dataset_Name:BigQuery_Table_Name>"
+        # The folder containing the SCHEMA_FILE and RUN_FILE files (assumes the folder resides in the same GCS bucket)
+        JOBSOURCEDIR = "source"
+        # The folder to store temporary Dataflow job files (assumes the folder resides in the same GCS bucket)
+        TEMPDIR = "temp"
 
 
         # Authenticate to other Google services using the associated Cloud Function service account
@@ -57,10 +61,7 @@ def CreateDataflowJob(event, context):
         RUN_FILE = "run.js"
         # The GCP zone to create the Dataflow job in
         ZONE = "us-central1-f"
-        # The folder containing the SCHEMA_FILE and RUN_FILE files (assumes the folder resides in the same GCS bucket)
-        JOBSOURCEDIR = "source"
-        # The folder to store temporary Dataflow job files (assumes the folder resides in the same GCS bucket)
-        TEMPDIR = "temp"
+
 
         # Parameters passed to the RESTful API's to create the Dataflow job using the preceeding variables
         BODY = {
