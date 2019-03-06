@@ -7,13 +7,13 @@ In this example, the associated GCS bucket is expected to contian at least two s
 GCS Bucket<br/>
 |<br/>
 |--source<br/>
-|   |<br/>
-|   |--run.js<br/>
-|   |--schema.json<br/>
+|...|<br/>
+|...|--run.js<br/>
+|...|--schema.json<br/>
 |<br/>
 |--temp<br/>
-   |<br/>
-   |--(empty)<br/>
+...|<br/>
+...|--(empty)<br/>
 
 
 You can change the layout of the folders and location of the datafiles to whatever you like, just make sure to update the associated variables of the scirpt and validate the correct path information under the "BODY = {" section.
