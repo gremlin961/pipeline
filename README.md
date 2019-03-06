@@ -7,12 +7,9 @@ In this example, the associated GCS bucket is expected to contian at least two s
 GCS Bucket<br/>
 |<br/>
 |--source<br/>
-|...|<br/>
-|...|--run.js<br/>
-|...|--schema.json<br/>
-|<br/>
+...|--run.js<br/>
+...|--schema.json<br/>
 |--temp<br/>
-...|<br/>
 ...|--(empty)<br/>
 
 
