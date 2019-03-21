@@ -6,6 +6,7 @@
 
 # Import the needed Python modules
 from googleapiclient.discovery import build
+from google.cloud import bigquery
 import json
 # The oauth2client is not currently included in the base Cloud Function python image. Include this module in your requirements.txt file
 from oauth2client.client import GoogleCredentials
@@ -24,66 +25,45 @@ def CreateDataflowJob(event, context):
 
     # Properly format the name of the uploaded file, removing any quotation marks left by the json output
     rawname = json.dumps(file['name'])
+    rawbucket = json.dumps(file['bucket'])
     filename = rawname.strip('"')
+    bucketname = rawbucket.strip('"')
+
 
     # Verify the file uploaded is a valid data file (in this case using the .csv extension).
     # If the file is valid, proceed with execution. If not, exit the script.
     if filename.endswith('.csv'):
 
-        # ---- Define Variables used to create the Dataflow job ----
+        # ---- Define Variables used to import the data file into BigQuery ----
 
+        # Initiate the BigQuery client
+        client = bigquery.Client()
+        # Set the destination BigQuery dataset
+        BQ_DATASET = 'test'
+        # Set the destination BigQuery table
+        BQ_TABLE = 'testtbl'
+        # Define the URI of the uploaded files
+        URI = 'gs://'+bucketname+'/'+filename
 
-        # The name of your GCP Project.
-        PROJECT = '<your_project_name>'
-        # The name of the GCS bucket where the files have been uploaded to
-        BUCKET = '<your_GCS_bucket_name>'
-        # The destination tabled in BigQuery. The format is GCP_Project_ID:dataset:table
-        BQ_OUTPUT_TABLE = "<Project_ID:BigQuery_Dataset_Name:BigQuery_Table_Name>"
+        dataset_ref = client.dataset(BQ_DATASET)
+        job_config = bigquery.LoadJobConfig()
+        job_config.autodetect = True
+        job_config.skip_leading_rows = 1
+        # The source format defaults to CSV, so the line below is optional.
+        job_config.source_format = bigquery.SourceFormat.CSV
 
+        load_job = client.load_table_from_uri(
+        URI,
+        dataset_ref.table(BQ_TABLE),
+        job_config=job_config)  # API request
+        print('Starting job {}'.format(load_job.job_id))
 
-        # Authenticate to other Google services using the associated Cloud Function service account
-        credentials = GoogleCredentials.get_application_default()
-        # Define the "service" variable to create a new Dataflow job
-        service = build('dataflow', 'v1b3', credentials=credentials)
-    	# Define the 'JOBNAME' variable as the name of the uploaded file.
-        JOBNAME = 'run-'+filename.lower()
-        # Define the Dataflow template to use. More templates can be found at https://cloud.google.com/dataflow/docs/guides/templates/provided-templates
-        TEMPLATE = 'GCS_Text_to_BigQuery'
-        # The full path to the Dataflow template
-        GCSPATH = "gs://dataflow-templates/latest/{template}".format(template=TEMPLATE)
-        # The file used to define the Schema mapping between the data file and the BigQuery table
-        SCHEMA_FILE = "schema.json"
-        # The file used to define the execution variables of your Dataflow job
-        RUN_FILE = "run.js"
-        # The GCP zone to create the Dataflow job in
-        ZONE = "us-central1-f"
-        # The folder containing the SCHEMA_FILE and RUN_FILE files (assumes the folder resides in the same GCS bucket)
-        JOBSOURCEDIR = "source"
-        # The folder to store temporary Dataflow job files (assumes the folder resides in the same GCS bucket)
-        TEMPDIR = "temp"
+        load_job.result()  # Waits for table load to complete.
+        print('Job finished.')
 
-        # Parameters passed to the RESTful API's to create the Dataflow job using the preceeding variables
-        BODY = {
-            "jobName": "{jobname}".format(jobname=JOBNAME),
-            "parameters": {
-                "javascriptTextTransformFunctionName": "transform",
-                "JSONPath": "gs://"+BUCKET+"/"+JOBSOURCEDIR+"/"+SCHEMA_FILE,
-                "javascriptTextTransformGcsPath": "gs://"+BUCKET+"/"+JOBSOURCEDIR+"/"+RUN_FILE,
-                "inputFilePattern":"gs://"+BUCKET+"/"+filename,
-                "outputTable":BQ_OUTPUT_TABLE,
-                "bigQueryLoadingTemporaryDirectory": "gs://"+BUCKET+"/"+TEMPDIR
-                },
-            "environment": {
-                "zone": ZONE
-            }
-        }
+        destination_table = client.get_table(dataset_ref.table('us_states'))
+        print('Loaded {} rows.'.format(destination_table.num_rows))
 
-        # Define the request and submit to the Dataflow RESTful API
-        request = service.projects().templates().launch(projectId=PROJECT, gcsPath=GCSPATH, body=BODY)
-        response = request.execute()
-
-        # Catoure the response from the Dataflow API and log to Stackdriver
-        print(response)
 
     # Exit the script if the uploaded file is not a valid data file
     else:
