@@ -61,7 +61,7 @@ def CreateDataflowJob(event, context):
         load_job.result()  # Waits for table load to complete.
         print('Job finished.')
 
-        destination_table = client.get_table(dataset_ref.table('us_states'))
+        destination_table = client.get_table(dataset_ref.table(BQ_TABLE))
         print('Loaded {} rows.'.format(destination_table.num_rows))
 
 
