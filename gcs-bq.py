@@ -1,8 +1,6 @@
 # This file is provided as an example only and is not sutible for use in a production environment
 # This script should be used as a GCP Cloud Function and triggered when a data file is uploaded to a GCS
-# buicket. The associated GCS bucket should contian at least two subdirectories, one for the Dataflow
-# job source files (defined as the JOBSOURCEDIR variable) and one for the temporary processing files
-# (defined as the TEMPDIR variable).
+# buicket. 
 
 # Import the needed Python modules
 from googleapiclient.discovery import build
@@ -13,7 +11,7 @@ from oauth2client.client import GoogleCredentials
 
 
 # Define a function that will be called by the Cloud Function
-def CreateDataflowJob(event, context):
+def CreateImportJob(event, context):
     """Triggered by a change to a Cloud Storage bucket.
     Args:
          event (dict): Event payload.
