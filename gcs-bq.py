@@ -1,13 +1,23 @@
 # This file is provided as an example only and is not sutible for use in a production environment
 # This script should be used as a GCP Cloud Function and triggered when a data file is uploaded to a GCS
-# buicket. 
+# buicket.
 
 # Import the needed Python modules
 from googleapiclient.discovery import build
 from google.cloud import bigquery
 import json
+# Include the ability to unzip compressed files
+from zipfile import ZipFile
+#from zipfile import is_zipfile
+#import io
 # The oauth2client is not currently included in the base Cloud Function python image. Include this module in your requirements.txt file
 from oauth2client.client import GoogleCredentials
+
+
+def ZipExtract(sourcefile, targetdir):
+    sourcezip = ZipFile(sourcefile)
+    sourcezip.extractall(targetdir)
+    sourcezip.close()
 
 
 # Define a function that will be called by the Cloud Function
@@ -26,11 +36,19 @@ def CreateImportJob(event, context):
     rawbucket = json.dumps(file['bucket'])
     filename = rawname.strip('"')
     bucketname = rawbucket.strip('"')
+    bucketpath = 'gs://'+bucketname+'/'
 
+    # Check if the uploaded file is a .zip compressed archive and if so extract it
+    if filename.endswith('.zip'):
+        # Authenticate to other Google services using the associated Cloud Function service account
+        credentials = GoogleCredentials.get_application_default()
+        print('Starting the extraction of zip archive file '+filename)
+        ZipExtract(bucketpath+filename, bucketpath)
+        print('Completed unzip of '+filename)
 
     # Verify the file uploaded is a valid data file (in this case using the .csv extension).
     # If the file is valid, proceed with execution. If not, exit the script.
-    if filename.endswith('.csv'):
+    elif filename.endswith('.csv'):
 
         # ---- Define Variables used to import the data file into BigQuery ----
 
@@ -41,7 +59,7 @@ def CreateImportJob(event, context):
         # Set the destination BigQuery table
         BQ_TABLE = 'testtbl'
         # Define the URI of the uploaded files
-        URI = 'gs://'+bucketname+'/'+filename
+        URI = bucketpath+filename
 
         dataset_ref = client.dataset(BQ_DATASET)
         job_config = bigquery.LoadJobConfig()
@@ -65,5 +83,5 @@ def CreateImportJob(event, context):
 
     # Exit the script if the uploaded file is not a valid data file
     else:
-        print(filename+' is not a csv file. Exiting')
+        print(filename+' is not a valid zip or csv file. Exiting')
         exit()
