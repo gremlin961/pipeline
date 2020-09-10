@@ -14,6 +14,7 @@ from zipfile import ZipFile
 from oauth2client.client import GoogleCredentials
 
 
+# Define a function to extract zip files
 def ZipExtract(sourcefile, targetdir):
     sourcezip = ZipFile(sourcefile)
     sourcezip.extractall(targetdir)

@@ -7,8 +7,17 @@
 # Import the needed Python modules
 from googleapiclient.discovery import build
 import json
+# Include the ability to unzip compressed files
+from zipfile import ZipFile
 # The oauth2client is not currently included in the base Cloud Function python image. Include this module in your requirements.txt file
 from oauth2client.client import GoogleCredentials
+
+
+# Define a function to extract zip files
+def ZipExtract(sourcefile, targetdir):
+    sourcezip = ZipFile(sourcefile)
+    sourcezip.extractall(targetdir)
+    sourcezip.close()
 
 
 # Define a function that will be called by the Cloud Function
@@ -26,9 +35,17 @@ def CreateDataflowJob(event, context):
     rawname = json.dumps(file['name'])
     filename = rawname.strip('"')
 
+    # Check if the uploaded file is a .zip compressed archive and if so extract it
+    if filename.endswith('.zip'):
+        # Authenticate to other Google services using the associated Cloud Function service account
+        credentials = GoogleCredentials.get_application_default()
+        print('Starting the extraction of zip archive file '+filename)
+        ZipExtract(bucketpath+filename, bucketpath)
+        print('Completed unzip of '+filename)
+
     # Verify the file uploaded is a valid data file (in this case using the .csv extension).
     # If the file is valid, proceed with execution. If not, exit the script.
-    if filename.endswith('.csv'):
+    elif filename.endswith('.csv'):
 
         # ---- Define Variables used to create the Dataflow job ----
 
