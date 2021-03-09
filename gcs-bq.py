@@ -13,11 +13,7 @@ from oauth2client.client import GoogleCredentials
 
 # Define a function that will be called by the Cloud Function
 def CreateDataflowJob(event, context):
-    """Triggered by a change to a Cloud Storage bucket.
-    Args:
-         event (dict): Event payload.
-         context (google.cloud.functions.Context): Metadata for the event.
-    """
+    # Define "file" as the event trigger data from the GCS file upload
     file = event
     # Print the name of the uploaded file that triggered the Cloud Function. The Output will be sent to Stackdriver by default
     print(f"Processing file: {file['name']}.")
@@ -38,7 +34,7 @@ def CreateDataflowJob(event, context):
         # The name of the GCS bucket where the files have been uploaded to
         BUCKET = '<your_GCS_bucket_name>'
         # The destination tabled in BigQuery. The format is GCP_Project_ID:dataset:table
-        BQ_OUTPUT_TABLE = '<Project_ID:BigQuery_Dataset_Name:BigQuery_Table_Name>'
+        BQ_OUTPUT_TABLE = '<Project_ID:BigQuery_Dataset_Name.BigQuery_Table_Name>'
         # The folder containing the SCHEMA_FILE and RUN_FILE files (assumes the folder resides in the same GCS bucket)
         JOBSOURCEDIR = 'source'
         # The folder to store temporary Dataflow job files (assumes the folder resides in the same GCS bucket)
