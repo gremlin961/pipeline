@@ -18,6 +18,10 @@ def CreateDataflowJob(event, context):
     # Print the name of the uploaded file that triggered the Cloud Function. The Output will be sent to Stackdriver by default
     print(f"Processing file: {file['name']}.")
 
+    # Uncomment the following two lines to print the full json payload provided by the triggered event. Useful for testing purposes only
+    #rawdata = json.dumps(file)
+    #print(rawdata)
+
     # Properly format the name of the uploaded file, removing any quotation marks left by the json output
     rawname = json.dumps(file['name'])
     filename = rawname.strip('"')
